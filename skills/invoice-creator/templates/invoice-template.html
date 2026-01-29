@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice {{invoice_number}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fff;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #2563eb;
+        }
+
+        .company-info h1 {
+            font-size: 28px;
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .company-info p {
+            margin: 4px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .invoice-meta {
+            text-align: right;
+        }
+
+        .invoice-meta h2 {
+            font-size: 32px;
+            color: #1e40af;
+            margin-bottom: 15px;
+        }
+
+        .invoice-meta p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .invoice-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .section h3 {
+            color: #1e40af;
+            font-size: 16px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .section p {
+            margin: 8px 0;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .items-table thead {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .items-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .items-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        .items-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .items-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .totals {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+
+        .totals-table {
+            width: 300px;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .totals-table .label {
+            text-align: right;
+            color: #666;
+            padding-right: 20px;
+        }
+
+        .totals-table .amount {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .totals-table .subtotal-row {
+            border-top: 2px solid #e5e7eb;
+            padding-top: 12px;
+        }
+
+        .totals-table .tax-row {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 8px;
+        }
+
+        .totals-table .total-row {
+            border-top: 3px solid #2563eb;
+            padding-top: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .footer p {
+            margin: 8px 0;
+        }
+
+        .payment-terms {
+            font-weight: 600;
+            color: #1e40af;
+            margin-top: 15px;
+        }
+
+        @media print {
+            body {
+                padding: 20px;
+            }
+
+            .invoice-header {
+                page-break-inside: avoid;
+            }
+
+            .items-table {
+                page-break-inside: avoid;
+            }
+
+            .totals {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-header">
+        <div class="company-info">
+            <h1>{{sender.name}}</h1>
+            <p>{{sender.address}}</p>
+            {% if sender.city %}
+            <p>{{sender.city}}, {{sender.state}} {{sender.zip}}</p>
+            {% endif %}
+            {% if sender.phone %}
+            <p>Phone: {{sender.phone}}</p>
+            {% endif %}
+            {% if sender.email %}
+            <p>Email: {{sender.email}}</p>
+            {% endif %}
+            {% if sender.tax_id %}
+            <p>Tax ID: {{sender.tax_id}}</p>
+            {% endif %}
+        </div>
+        <div class="invoice-meta">
+            <h2>INVOICE</h2>
+            <p><strong>Invoice #:</strong> {{invoice_number}}</p>
+            <p><strong>Date:</strong> {{invoice_date}}</p>
+            {% if due_date %}
+            <p><strong>Due Date:</strong> {{due_date}}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="invoice-details">
+        <div class="section">
+            <h3>Bill To</h3>
+            <p><strong>{{customer.name}}</strong></p>
+            <p>{{customer.address}}</p>
+            {% if customer.city %}
+            <p>{{customer.city}}, {{customer.state}} {{customer.zip}}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Description</th>
+                <th class="text-center">Quantity</th>
+                <th class="text-right">Unit Price</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{item.name}}</td>
+                <td>{{item.description or ''}}</td>
+                <td class="text-center">{{item.quantity}}</td>
+                <td class="text-right">{{currency_symbol}}{{item.unit_price | number_format(2)}}</td>
+                <td class="text-right">{{currency_symbol}}{{item.total | number_format(2)}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <table class="totals-table">
+            <tr class="subtotal-row">
+                <td class="label">Subtotal:</td>
+                <td class="amount">{{currency_symbol}}{{subtotal | number_format(2)}}</td>
+            </tr>
+            {% if tax_rate > 0 %}
+            <tr class="tax-row">
+                <td class="label">Tax ({{tax_rate | percentage}}):</td>
+                <td class="amount">{{currency_symbol}}{{tax_amount | number_format(2)}}</td>
+            </tr>
+            {% endif %}
+            <tr class="total-row">
+                <td class="label">Total:</td>
+                <td class="amount">{{currency_symbol}}{{total | number_format(2)}}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer">
+        {% if payment_terms %}
+        <p class="payment-terms">Payment Terms: {{payment_terms}}</p>
+        {% endif %}
+        {% if notes %}
+        <p><strong>Notes:</strong> {{notes}}</p>
+        {% endif %}
+        <p style="margin-top: 20px; text-align: center; color: #999;">
+            Thank you for your business!
+        </p>
+    </div>
+</body>
+</html>
