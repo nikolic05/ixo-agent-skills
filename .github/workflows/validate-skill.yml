@@ -1,0 +1,88 @@
+name: Validate Skill
+
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+
+jobs:
+  validate:
+    name: Validate Skill Structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get changed skills
+        id: changed-skills
+        run: |
+          # Get list of changed skill directories
+          CHANGED_SKILLS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '^skills/' | cut -d'/' -f2 | sort -u | tr '\n' ' ')
+          echo "skills=$CHANGED_SKILLS" >> $GITHUB_OUTPUT
+          echo "Changed skills: $CHANGED_SKILLS"
+
+      - name: Validate each skill
+        run: |
+          ERRORS=0
+
+          for SKILL_NAME in ${{ steps.changed-skills.outputs.skills }}; do
+            SKILL_DIR="skills/$SKILL_NAME"
+            echo "::group::Validating $SKILL_NAME"
+
+            # Check if SKILL.md exists
+            if [ ! -f "$SKILL_DIR/SKILL.md" ]; then
+              echo "::error::$SKILL_DIR/SKILL.md not found"
+              ERRORS=$((ERRORS + 1))
+              echo "::endgroup::"
+              continue
+            fi
+
+            # Check folder name format (lowercase alphanumeric + hyphens)
+            if ! echo "$SKILL_NAME" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)*$'; then
+              echo "::error::Invalid folder name '$SKILL_NAME'. Must be lowercase alphanumeric with single hyphens."
+              ERRORS=$((ERRORS + 1))
+            fi
+
+            # Check folder name length
+            if [ ${#SKILL_NAME} -gt 64 ]; then
+              echo "::error::Folder name '$SKILL_NAME' is too long (max 64 characters)"
+              ERRORS=$((ERRORS + 1))
+            fi
+
+            # Extract frontmatter
+            FRONTMATTER=$(sed -n '/^---$/,/^---$/p' "$SKILL_DIR/SKILL.md" | sed '1d;$d')
+
+            if [ -z "$FRONTMATTER" ]; then
+              echo "::error::No YAML frontmatter found in $SKILL_DIR/SKILL.md"
+              ERRORS=$((ERRORS + 1))
+              echo "::endgroup::"
+              continue
+            fi
+
+            # Check required 'name' field
+            NAME_VALUE=$(echo "$FRONTMATTER" | grep -E '^name:' | sed 's/name:[[:space:]]*//')
+            if [ -z "$NAME_VALUE" ]; then
+              echo "::error::Missing required 'name' field in frontmatter"
+              ERRORS=$((ERRORS + 1))
+            elif [ "$NAME_VALUE" != "$SKILL_NAME" ]; then
+              echo "::error::Folder name '$SKILL_NAME' does not match frontmatter name '$NAME_VALUE'"
+              ERRORS=$((ERRORS + 1))
+            fi
+
+            # Check required 'description' field
+            DESC_VALUE=$(echo "$FRONTMATTER" | grep -E '^description:' | sed 's/description:[[:space:]]*//')
+            if [ -z "$DESC_VALUE" ]; then
+              echo "::error::Missing required 'description' field in frontmatter"
+              ERRORS=$((ERRORS + 1))
+            fi
+
+            echo "Validation passed for $SKILL_NAME"
+            echo "::endgroup::"
+          done
+
+          if [ $ERRORS -gt 0 ]; then
+            echo "::error::Validation failed with $ERRORS error(s)"
+            exit 1
+          fi
+
+          echo "All skills validated successfully!"

@@ -1,0 +1,74 @@
+name: Publish Skill
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'skills/**'
+
+jobs:
+  publish:
+    name: Publish Skills to Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get changed skills
+        id: changed-skills
+        run: |
+          # Get list of changed skill directories
+          CHANGED_SKILLS=$(git diff --name-only HEAD~1 HEAD | grep '^skills/' | cut -d'/' -f2 | sort -u | tr '\n' ' ')
+          echo "skills=$CHANGED_SKILLS" >> $GITHUB_OUTPUT
+          echo "Changed skills: $CHANGED_SKILLS"
+
+      - name: Publish each skill
+        env:
+          SKILLS_API_KEY: ${{ secrets.SKILLS_API_KEY }}
+          SKILLS_SERVER_URL: https://capsules.skills.ixo.earth
+        run: |
+          for SKILL_NAME in ${{ steps.changed-skills.outputs.skills }}; do
+            SKILL_DIR="skills/$SKILL_NAME"
+
+            # Skip if directory doesn't exist (was deleted)
+            if [ ! -d "$SKILL_DIR" ]; then
+              echo "Skipping $SKILL_NAME (deleted)"
+              continue
+            fi
+
+            echo "::group::Publishing $SKILL_NAME"
+
+            # Create tar.gz archive
+            tar -czf "${SKILL_NAME}.tar.gz" -C skills "$SKILL_NAME"
+
+            # Upload to skills server
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+              -H "Authorization: Bearer $SKILLS_API_KEY" \
+              -H "Content-Type: application/gzip" \
+              --data-binary "@${SKILL_NAME}.tar.gz" \
+              "$SKILLS_SERVER_URL/capsules")
+
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
+
+            if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+              CID=$(echo "$BODY" | jq -r '.cid')
+              echo "Successfully published $SKILL_NAME"
+              echo "CID: $CID"
+              echo "URL: $SKILLS_SERVER_URL/capsules/$CID"
+            else
+              echo "::error::Failed to publish $SKILL_NAME (HTTP $HTTP_CODE)"
+              echo "$BODY"
+              exit 1
+            fi
+
+            # Cleanup
+            rm -f "${SKILL_NAME}.tar.gz"
+
+            echo "::endgroup::"
+          done
+
+          echo "All skills published successfully!"
