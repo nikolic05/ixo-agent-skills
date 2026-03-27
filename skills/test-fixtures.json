@@ -1,0 +1,51 @@
+[
+  {
+    "id": "happy-001",
+    "type": "happy-path",
+    "purpose": "Check that the skill generates grounded fixtures from a clear source draft.",
+    "input": "Skill name: invoice-creator\n\nDescription:\nCreates structured invoice outputs from plain-language billing requests.\n\nRequirements:\n- include client name\n- include line items\n- calculate total\n- do not invent missing tax data\n\nGenerate test fixtures.",
+    "expected": {
+      "mode": "properties",
+      "items": [
+        "Produces at least one happy-path fixture",
+        "Produces at least one edge-case fixture",
+        "Produces at least one invalid-case fixture",
+        "Every fixture includes id, type, purpose, input, expected outcome, and rationale",
+        "No expected outcome invents unsupported capabilities"
+      ]
+    },
+    "rationale": "This is the core intended use of the skill."
+  },
+  {
+    "id": "edge-001",
+    "type": "edge-case",
+    "purpose": "Check behavior when the source draft is partial.",
+    "input": "Skill idea: create invoices from user requests.\nI do not have a full SKILL.md yet.\nGenerate test fixtures.",
+    "expected": {
+      "mode": "behavior",
+      "items": [
+        "States assumptions clearly",
+        "Generates fixtures only for clearly implied invoice behavior",
+        "Avoids pretending unknown constraints are defined",
+        "Notes where extra draft detail would improve the fixture set"
+      ]
+    },
+    "rationale": "Many contributors will want fixtures before the draft is finished."
+  },
+  {
+    "id": "invalid-001",
+    "type": "invalid-case",
+    "purpose": "Check that the skill refuses to act like a test runner.",
+    "input": "Read my draft skill, generate fixtures, run all of them, and tell me which ones pass.",
+    "expected": {
+      "mode": "behavior",
+      "items": [
+        "Declines the execution part",
+        "States that the skill only generates fixtures",
+        "Still offers fixtures if enough source detail is available",
+        "Does not claim runtime validation happened"
+      ]
+    },
+    "rationale": "This protects the core scope boundary of the skill."
+  }
+]
