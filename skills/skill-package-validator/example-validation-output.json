@@ -1,0 +1,49 @@
+{
+  "skill_path": "/mnt/data/skills/skill-package-validator",
+  "folder_name": "skill-package-validator",
+  "valid": true,
+  "checks": [
+    {
+      "id": "folder-name",
+      "passed": true,
+      "message": "Folder name is valid."
+    },
+    {
+      "id": "skill-md",
+      "passed": true,
+      "message": "SKILL.md exists."
+    },
+    {
+      "id": "frontmatter",
+      "passed": true,
+      "message": "YAML frontmatter parsed successfully."
+    },
+    {
+      "id": "name-match",
+      "passed": true,
+      "message": "Frontmatter name matches folder name."
+    },
+    {
+      "id": "description",
+      "passed": true,
+      "message": "Description is concrete enough."
+    },
+    {
+      "id": "instructions",
+      "passed": true,
+      "message": "Instruction body is structured."
+    },
+    {
+      "id": "script-validate_skill_package.py",
+      "passed": true,
+      "message": "validate_skill_package.py is CLI-compatible."
+    },
+    {
+      "id": "script-docs-validate_skill_package.py",
+      "passed": true,
+      "message": "validate_skill_package.py is documented in SKILL.md."
+    }
+  ],
+  "warnings": [],
+  "suggested_fixes": []
+}
